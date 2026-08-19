@@ -1,43 +1,48 @@
-// SCROLL ANIMATION
-const elements = document.querySelectorAll('.fade');
+const revealItems = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries, observer) => {
+  entries.forEach((entry) => {
+    if (!entry.isIntersecting) return;
+    entry.target.classList.add('visible');
+    observer.unobserve(entry.target);
+  });
+}, { threshold: 0.12 });
+revealItems.forEach((item) => revealObserver.observe(item));
 
-const observer = new IntersectionObserver(entries=>{
-entries.forEach(entry=>{
-if(entry.isIntersecting){
-entry.target.classList.add('show');
+const popup = document.getElementById('videoPopup');
+const popupVideo = document.getElementById('popupVideo');
+const closeButton = document.querySelector('.close-btn');
+
+function closePopup() {
+  if (!popup) return;
+  popup.classList.remove('active');
+  popupVideo.src = '';
 }
-});
-});
 
-elements.forEach(el=>observer.observe(el));
+function openYouTubeVideo(videoId) {
+  if (!popup || !videoId) return;
+  popupVideo.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+  popup.classList.add('active');
+  closeButton?.focus();
+}
 
-
-// VIDEO HOVER PLAY
-document.querySelectorAll('.card video').forEach(video=>{
-video.addEventListener('mouseover',()=>video.play());
-video.addEventListener('mouseout',()=>video.pause());
-});// VIDEO POPUP
-const popup = document.getElementById("videoPopup");
-const popupVideo = document.getElementById("popupVideo");
-const closeBtn = document.querySelector(".close-btn");
-
-document.querySelectorAll(".card").forEach(card => {
-    card.addEventListener("click", () => {
-        const videoSrc = card.getAttribute("data-video");
-        popupVideo.src = videoSrc;
-        popup.classList.add("active");
-        popupVideo.play();
-    });
-});
-
-closeBtn.addEventListener("click", () => {
-    popup.classList.remove("active");
-    popupVideo.pause();
-});
-
-popup.addEventListener("click", (e) => {
-    if(e.target === popup){
-        popup.classList.remove("active");
-        popupVideo.pause();
+document.querySelectorAll('.project-card').forEach((card) => {
+  card.addEventListener('click', () => openYouTubeVideo(card.dataset.videoId));
+  card.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openYouTubeVideo(card.dataset.videoId);
     }
+  });
+  card.setAttribute('tabindex', '0');
+  card.setAttribute('role', 'button');
+  card.setAttribute('aria-label', `Play ${card.querySelector('h3')?.textContent || 'project'} video`);
 });
+
+closeButton?.addEventListener('click', closePopup);
+popup?.addEventListener('click', (event) => {
+  if (event.target === popup) closePopup();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closePopup();
+});
+
